@@ -1,22 +1,35 @@
 pipeline {
-    agent {
-        docker { image 'python:3.8' }
-    }
+    agent any
+
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
                 // Git 저장소에서 코드를 가져옵니다.
                 git url: 'https://github.com/jay-gatech/jenkins.git', branch: 'main'
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                // 필요한 Python 패키지를 설치합니다.
-                sh 'python3 -m pip install -r requirements.txt'
-                // Python 스크립트를 실행합니다.
-                sh 'python3 hello_world.py'
+                // Dockerfile을 사용하여 이미지를 빌드합니다.
+                script {
+                    def dockerImage = docker.build("my-docker-image")
+                }
             }
         }
+
+        stage('Run Container and Execute Script') {
+            steps {
+                // 빌드한 이미지를 사용하여 컨테이너를 실행하고 Python 스크립트를 실행합니다.
+                script {
+                    docker.run(image: 'my-docker-image', args: '-v $(pwd):/workspace', command: 'sh -c "cd /workspace && python your-script.py"')
+                }
+            }
+        }
+
+        // 필요한 추가 단계를 여기에 추가할 수 있습니다.
     }
 }
+
+
+
